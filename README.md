@@ -8,6 +8,18 @@ Tasks, calendar, habits and a focus timer for the Mac. Everything is stored loca
     npm test           # unit tests
     E2E_DIR=/some/empty/dir node test/e2e.mjs    # drives the app on its own data; set DAYBOOK_BIN to test a packaged build
 
+## Install or update the app
+
+    npm install            # first time only
+    npm run install-app
+
+This builds a production copy, packages it as `Daybook.app` and puts it in `/Applications`, so it shows up in Spotlight, Launchpad and the Dock. Run the same command again after pulling changes to update it.
+
+- Quit Daybook first (right-click the menu bar icon > Quit). The installer refuses to replace a running app.
+- Your data is not touched: it lives in `~/Library/Application Support/Daybook`, not in the app.
+- To only build the `.app` without installing it, use `npm run package`; it lands in `dist/Daybook-darwin-arm64/` (or `-x64` on Intel).
+- The app is only ad-hoc signed, not signed or notarized with an Apple developer certificate. Building it yourself is fine; a copied `.app` sent to another Mac is blocked by Gatekeeper until allowed in System Settings > Privacy & Security > Open Anyway.
+
 ## Quick add
 
 `Call Ama friday 3pm every week #family !high ~Personal remind 30 min`
