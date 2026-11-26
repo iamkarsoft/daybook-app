@@ -80,7 +80,7 @@ test('csv import', () => {
 })
 import { backupJson, backupMarkdown, parseBackup, restoreOps } from '../src/shared/backup.ts'
 import { DEFAULTS, type Snapshot } from '../src/shared/types.ts'
-const snap = (x: Partial<Snapshot>): Snapshot => ({ list: [], section: [], task: [], habit: [], log: [], focus: [], settings: [DEFAULTS], ...x })
+const snap = (x: Partial<Snapshot>): Snapshot => ({ list: [], section: [], task: [], habit: [], log: [], focus: [], distraction: [], settings: [DEFAULTS], ...x })
 test('backup text is stable and reads back', () => {
   const a = newTask({ id: 'a', title: 'A', order: 1, createdAt: 1 }), b = newTask({ id: 'b', title: 'B', order: 2, createdAt: 2 })
   const flip = Object.fromEntries(Object.entries(a).reverse()) as any
@@ -95,4 +95,22 @@ test('restore replaces everything', () => {
 test('markdown escapes titles and hides finished work', () => {
   const m = backupMarkdown(snap({ task: [newTask({ title: '*x* <b>\n# y', due: '2026-12-01', tags: ['t'] }), newTask({ title: 'gone', status: 'done' }), newTask({ title: 'binned', deletedAt: 1 })] }))
   assert.match(m, /- \[ \] \\\*x\\\* \\<b\\> \\# y \(2026-12-01\) `t`/); assert.doesNotMatch(m, /gone|binned/)
+})
+import { inSession, newDistraction, stats, themes } from '../src/shared/distractions.ts'
+import { IDLE } from '../src/shared/types.ts'
+test('older backups without distractions still read', () => {
+  const j = JSON.parse(backupJson(snap({}))); delete j.distraction
+  assert.deepEqual(parseBackup(JSON.stringify(j)).distraction, [])
+})
+test('distraction analytics', () => {
+  const at = (d: number, h: number) => new Date(2026, 10, d, h, 5).getTime(), s1 = at(24, 9), s2 = at(25, 14)
+  const timer = (startedAt: number) => ({ ...IDLE, phase: 'focus' as const, startedAt, taskId: 't', title: 'Write' })
+  const ds = [newDistraction(timer(s1), 'checked slack', at(24, 9)), newDistraction(timer(s1), 'Slack again, email', at(24, 9)), newDistraction(timer(s2), 'email', at(25, 14)), newDistraction(IDLE, '', at(10, 8))]
+  ds[2].penalty = 5
+  assert.equal(inSession(ds, s1), 2); assert.equal(ds[3].session, null)
+  const focus = [s1, s2, at(23, 10)].map((startedAt, i) => ({ id: 'f' + i, taskId: null, title: '', date: `2026-11-${[24, 25, 23][i]}`, startedAt, minutes: 30 }))
+  const st = stats(ds, focus, '2026-11-25', 7)
+  assert.deepEqual([st.total, st.prevTotal, st.perDay.slice(-2), st.perHour[9], st.perHour[14], st.sessions, st.clean, st.focusMin, st.perHourFocused, st.penaltyMin], [3, 0, [2, 1], 2, 1, 3, 1, 90, 2, 5])
+  assert.deepEqual(st.byTask, [['Write', 3]]); assert.deepEqual(themes(ds), [['email', 2], ['slack', 2]])
+  assert.equal(stats(ds, focus, '2026-11-25', 30).total, 4)
 })

@@ -157,6 +157,12 @@ const handlers: Handlers = {
   'timer.pause': () => { if (timer.endsAt) setTimer({ ...timer, left: Math.max(0, timer.endsAt - Date.now()), endsAt: null }) },
   'timer.resume': () => { if (timer.left !== null) setTimer({ ...timer, endsAt: Date.now() + timer.left, left: null }) },
   'timer.stop': () => { logFocus(); setTimer({ ...IDLE, done: timer.done }) },
+  'timer.task': (_, taskId, title) => { if (timer.phase !== 'break') setTimer({ ...timer, taskId: typeof taskId === 'string' ? taskId : null, title: String(title ?? '').slice(0, 500) }) },
+  'timer.extend': (_, minutes) => {
+    const ms = Math.max(0, Math.min(120, Math.trunc(Number(minutes)) || 0)) * 60000
+    if (timer.phase !== 'focus' || !ms) return
+    setTimer({ ...timer, total: timer.total + ms, ...(timer.endsAt ? { endsAt: timer.endsAt + ms } : { left: (timer.left ?? 0) + ms }) })
+  },
   'backup.export': async () => {
     const name = `daybook-${ymd(new Date())}.json`
     const path = process.env.DAYBOOK_EXPORT_DIR ? join(process.env.DAYBOOK_EXPORT_DIR, name) : (await dialog.showSaveDialog(win!, { defaultPath: join(app.getPath('downloads'), name) })).filePath
@@ -200,7 +206,7 @@ function buildMenu() {
     { label: 'Daybook', submenu: [{ role: 'about' }, { type: 'separator' }, go('Settings…', 'CmdOrCtrl+,', 'settings'), { type: 'separator' }, { role: 'hide' }, { role: 'hideOthers' }, { type: 'separator' }, { role: 'quit' }] },
     { label: 'File', submenu: [go('New Task', 'CmdOrCtrl+N', 'new'), go('New List', 'CmdOrCtrl+Shift+N', 'new-list'), { type: 'separator' }, { role: 'close' }] },
     { label: 'Edit', submenu: [go('Undo', 'CmdOrCtrl+Z', 'undo'), { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }, { type: 'separator' }, go('Search', 'CmdOrCtrl+K', 'search')] },
-    { label: 'Go', submenu: ['Today', 'Next 7 Days', 'Inbox', 'Calendar', 'Matrix', 'Habits', 'Focus'].map((l, i) => go(l, `CmdOrCtrl+${i + 1}`, 'go:' + ['today', 'week', 'inbox', 'calendar', 'matrix', 'habits', 'focus'][i])) },
+    { label: 'Go', submenu: ['Today', 'Next 7 Days', 'Inbox', 'Calendar', 'Matrix', 'Habits', 'Focus', 'Distractions'].map((l, i) => go(l, `CmdOrCtrl+${i + 1}`, 'go:' + ['today', 'week', 'inbox', 'calendar', 'matrix', 'habits', 'focus', 'distractions'][i])) },
     { label: 'View', submenu: [{ role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { role: 'togglefullscreen' }, ...(app.isPackaged ? [] : [{ role: 'toggleDevTools' } as MenuItemConstructorOptions])] },
     { role: 'windowMenu' },
   ]))

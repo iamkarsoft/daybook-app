@@ -27,18 +27,20 @@ export interface Section { id: string; listId: string; name: string; order: numb
 export interface Habit { id: string; name: string; color: string; goal: number; unit: string; days: number[]; order: number; createdOn: string; archived: boolean }
 export interface HabitLog { id: string; habitId: string; date: string; count: number }
 export interface FocusLog { id: string; taskId: string | null; title: string; date: string; startedAt: number; minutes: number }
-export interface Settings { id: 'main'; weekStart: 0 | 1; allDayTime: string; focusMin: number; shortMin: number; longMin: number; menuBar: 'count' | 'next' | 'icon'; sort: Record<string, SortKey> }
+/** One moment attention slipped during focus. `session` is the focus session's startedAt, linking it to its FocusLog. */
+export interface Distraction { id: string; at: number; date: string; note: string; taskId: string | null; title: string; session: number | null; /** Minutes added to the session for it. */ penalty: number }
+export interface Settings { id: 'main'; weekStart: 0 | 1; allDayTime: string; focusMin: number; shortMin: number; longMin: number; menuBar: 'count' | 'next' | 'icon'; penaltyMin: number; sort: Record<string, SortKey> }
 export type SortKey = 'date' | 'priority' | 'manual' | 'title'
 
-export interface Kinds { list: List; section: Section; task: Task; habit: Habit; log: HabitLog; focus: FocusLog; settings: Settings }
+export interface Kinds { list: List; section: Section; task: Task; habit: Habit; log: HabitLog; focus: FocusLog; distraction: Distraction; settings: Settings }
 export type Kind = keyof Kinds
-export const KINDS: Kind[] = ['list', 'section', 'task', 'habit', 'log', 'focus', 'settings']
+export const KINDS: Kind[] = ['list', 'section', 'task', 'habit', 'log', 'focus', 'distraction', 'settings']
 export type Op = { [K in Kind]: { kind: K; put?: Kinds[K][]; del?: string[] } }[Kind]
 export type Snapshot = { [K in Kind]: Kinds[K][] }
 
 export interface Timer { phase: 'idle' | 'focus' | 'break'; endsAt: number | null; left: number | null; total: number; startedAt: number; taskId: string | null; title: string; done: number }
 export const IDLE: Timer = { phase: 'idle', endsAt: null, left: null, total: 0, startedAt: 0, taskId: null, title: '', done: 0 }
-export const DEFAULTS: Settings = { id: 'main', weekStart: 1, allDayTime: '09:00', focusMin: 25, shortMin: 5, longMin: 15, menuBar: 'count', sort: {} }
+export const DEFAULTS: Settings = { id: 'main', weekStart: 1, allDayTime: '09:00', focusMin: 25, shortMin: 5, longMin: 15, menuBar: 'count', penaltyMin: 2, sort: {} }
 
 export type GhEvery = 'changes' | 'hour' | 'day' | 'manual'
 export interface GhStatus { gh: boolean; auth: 'gh' | 'token'; login: string; repo: string; every: GhEvery; markdown: boolean; lastOk: number; error: string; block: boolean; busy: boolean }
@@ -51,6 +53,10 @@ export interface Rpc {
   'timer.pause': () => void
   'timer.resume': () => void
   'timer.stop': () => void
+  /** Adds minutes to the running or paused focus session. */
+  'timer.extend': (minutes: number) => void
+  /** Attaches a task to the running session, or to the next one when idle. */
+  'timer.task': (taskId: string | null, title: string) => void
   'backup.export': () => string | null
   'backup.local': () => string
   'gh.status': () => GhStatus

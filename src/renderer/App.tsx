@@ -7,6 +7,7 @@ import { Compose } from './Add.tsx'
 import { ago, BackupDialog } from './Backup.tsx'
 import { Calendar } from './Calendar.tsx'
 import { Detail } from './Detail.tsx'
+import { Distractions } from './Distractions.tsx'
 import { clock, Focus, useLeft } from './Focus.tsx'
 import { Habits } from './Habits.tsx'
 import { ListView, Matrix, Search } from './Lists.tsx'
@@ -14,7 +15,7 @@ import { ask, boot, call, COLORS, fail, go, listsOf, menuHandlers, move, mutate,
 import { Ask, Icon, Modal, Toast, useDrop } from './ui.tsx'
 
 const SMART: [View['t'], string, string][] = [['today', 'Today', 'sun'], ['week', 'Next 7 Days', 'week'], ['inbox', 'Inbox', 'inbox'], ['all', 'All Tasks', 'all']]
-const TOOLS: [View['t'], string, string][] = [['calendar', 'Calendar', 'cal'], ['matrix', 'Matrix', 'matrix'], ['habits', 'Habits', 'habit'], ['focus', 'Focus', 'focus']]
+const TOOLS: [View['t'], string, string][] = [['calendar', 'Calendar', 'cal'], ['matrix', 'Matrix', 'matrix'], ['habits', 'Habits', 'habit'], ['focus', 'Focus', 'focus'], ['distractions', 'Distractions', 'bolt']]
 
 export function App() {
   const { ready, view, selected, search, settings } = useStore()
@@ -46,10 +47,10 @@ export function App() {
     return () => removeEventListener('keydown', key)
   }, [])
   // Views without an add bar still answer New Task.
-  useEffect(() => { const has = !['calendar', 'matrix', 'habits', 'focus', 'done', 'trash'].includes(view.t) && !(view.t === 'list' && !data.list[view.id]); if (!has) menuHandlers.new = () => useStore.setState({ compose: {} }) }, [view])
+  useEffect(() => { const has = !['calendar', 'matrix', 'habits', 'focus', 'distractions', 'done', 'trash'].includes(view.t) && !(view.t === 'list' && !data.list[view.id]); if (!has) menuHandlers.new = () => useStore.setState({ compose: {} }) }, [view])
   if (!ready) return null
   const v: View = view.t === 'list' && !data.list[view.id] ? { t: 'inbox' } : view
-  return <div className="app"><Sidebar v={v} /><main>{v.t === 'calendar' ? <Calendar /> : v.t === 'matrix' ? <Matrix /> : v.t === 'habits' ? <Habits /> : v.t === 'focus' ? <Focus /> : <ListView key={JSON.stringify(v)} view={v} />}</main>{selected && data.task[selected] && <Detail />}{search && <Search />}{settings && <SettingsDialog />}<Compose /><Ask /><Toast /></div>
+  return <div className="app"><Sidebar v={v} /><main>{v.t === 'calendar' ? <Calendar /> : v.t === 'matrix' ? <Matrix /> : v.t === 'habits' ? <Habits /> : v.t === 'focus' ? <Focus /> : v.t === 'distractions' ? <Distractions /> : <ListView key={JSON.stringify(v)} view={v} />}</main>{selected && data.task[selected] && <Detail />}{search && <Search />}{settings && <SettingsDialog />}<Compose /><Ask /><Toast /></div>
 }
 function addList() {
   const n = listsOf(useStore.getState().data), l: List = { id: newId(), name: 'New list', color: COLORS[n.length % COLORS.length], order: Date.now(), view: 'list' }
@@ -101,6 +102,7 @@ function SettingsDialog() {
   return <Modal title="Settings" onClose={close} wide><div className="form">
     <div className="two"><label>Week starts on<select value={s.weekStart} onChange={(e) => saveSettings({ weekStart: Number(e.target.value) as 0 | 1 })}><option value={1}>Monday</option><option value={0}>Sunday</option></select></label><label>All-day reminders at<input type="time" value={s.allDayTime} onChange={(e) => { if (e.target.value) saveSettings({ allDayTime: e.target.value }) }} /></label></div>
     <div className="three">{num('focusMin', 'Focus minutes')}{num('shortMin', 'Short break')}{num('longMin', 'Long break')}</div>
+    <label>Distraction penalty to suggest, in minutes<input type="number" min={0} max={120} value={s.penaltyMin} onChange={(e) => saveSettings({ penaltyMin: Math.max(0, Math.min(120, Math.trunc(Number(e.target.value)) || 0)) })} /></label>
     <label>Menu bar shows<select value={s.menuBar} onChange={(e) => saveSettings({ menuBar: e.target.value as 'count' })}><option value="count">How many tasks are due</option><option value="next">Next task with a time</option><option value="icon">Icon only</option></select></label>
     <div className="ghrepo"><span><b>GitHub backup</b><small className={gh?.error ? 'warn' : 'muted'}>{!gh?.repo ? 'Off' : gh.error || `${gh.repo}. ${gh.lastOk ? `Backed up ${ago(gh.lastOk)}` : 'Not backed up yet'}`}</small></span><button onClick={() => setGhOpen(true)}>{gh?.repo ? 'Options…' : 'Set Up…'}</button></div>
     <label className="inline"><input type="checkbox" checked={login} onChange={(e) => { const on = e.target.checked; call('login.set', on).then(() => setLogin(on), fail) }} /> Open at login, so reminders always fire</label>
