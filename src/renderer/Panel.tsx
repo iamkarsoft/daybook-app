@@ -5,6 +5,7 @@ import { byDate, byManual } from '../shared/tasks.ts'
 import type { Habit, Task } from '../shared/types.ts'
 import { AddBar } from './Add.tsx'
 import { clock, useLeft } from './Focus.tsx'
+import { Capture } from './Distractions.tsx'
 import { Check } from './Row.tsx'
 import { bumpHabit, call, fail, inView, menuHandlers, reschedule, tasksOf, undo, useStore, type View } from './store.ts'
 import { Icon, Menu, Toast } from './ui.tsx'
@@ -37,6 +38,7 @@ export function Panel() {
     <div className="panel">
       <header><h1>{fmt(today, { weekday: 'long' })}</h1><span>{fmt(today, { month: 'short', day: 'numeric' })}</span><span className="grow" /><button className="ghost" aria-label="Open Daybook" title="Open Daybook" onClick={() => call('app.show', null)}><Icon n="board" /></button></header>
       <FocusStrip />
+      <Capture className="inpanel" />
       {next && tab === 'today' && <p className="nextup">Next: {next.title} <b>{until(toMin(next.time!) - toMin(hm(new Date(minute))))}</b></p>}
       <AddBar key={`${opened}${tab}`} auto preset={tab === 'inbox' ? {} : { due: today }} placeholder={tab === 'inbox' ? 'Add to Inbox' : 'Add for today'} onEscape={() => call('panel.close')} />
       <div className="seg" role="tablist">{TABS.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}<small>{tasksOf(data).filter((t) => inView({ t: k } as View, t, today)).length || ''}</small></button>)}</div>

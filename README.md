@@ -18,6 +18,12 @@ Dates, times, repeats, `#tag`, `!high/medium/low` and `~List` are read from what
 
 Click the icon for a panel with today, the next 7 days and Inbox: add, complete, reschedule, start the focus timer and log habits. Click a task to open it in the app. Right-click for Open, Quick Add and Quit. Settings decides whether the icon shows the number due, the next timed task, or nothing; a running timer always shows its countdown.
 
+## Distractions
+
+While a focus session runs, press **Distracted** (in the menu bar panel or the Focus view). It counts the distraction and pauses the timer. Then note what pulled you away, if you like, and choose how many minutes to add to the session as a penalty (default set in Settings) before it resumes. Escape or Skip keeps the count, adds no penalty and resumes.
+
+Go > Distractions (⌘8) shows totals against the previous period, distractions per focus hour, distraction-free sessions, penalty minutes, a chart by day and by hour, words that keep coming up in your notes, the tasks you were on, and the full log, where notes can be edited or deleted.
+
 ## GitHub backup
 
 Settings > GitHub backup. Connect with the GitHub CLI, or a fine-grained token with Contents: read and write (kept in the keychain). Choose how often: a few minutes after changes, hourly, daily, or only when asked.
@@ -33,7 +39,7 @@ Test with `E2E_DIR=/some/empty/dir node test/github.mjs`, which uses a fake GitH
 
 ## Keys
 
-⌘N new task · ⌘K search · ⌘Z undo · ⌘1 to ⌘7 views · ↑↓ move · Space complete · T today · M tomorrow · 0 to 3 priority · ⌫ Trash
+⌘N new task · ⌘K search · ⌘Z undo · ⌘1 to ⌘8 views · ↑↓ move · Space complete · T today · M tomorrow · 0 to 3 priority · ⌫ Trash
 
 ## How it behaves
 

@@ -24,6 +24,8 @@ export function parseBackup(text: string): Snapshot {
   try { j = JSON.parse(text) } catch { throw new Error('That backup is not readable') }
   if (j?.app !== 'daybook') throw new Error('That is not a Daybook backup')
   if (j.version !== 1) throw new Error('That backup came from a newer version of Daybook')
+  // Backups from before distractions existed have none.
+  j.distraction ??= []
   for (const k of KINDS) if (!Array.isArray(j[k]) || j[k].some((x: any) => !x || typeof x.id !== 'string' || !x.id)) throw new Error(`That backup is damaged (${k})`)
   if (j.task.some((t: any) => typeof t.title !== 'string' || !Array.isArray(t.tags) || !Array.isArray(t.subtasks) || !Array.isArray(t.reminders))) throw new Error('That backup is damaged (task)')
   return Object.fromEntries(KINDS.map((k) => [k, j[k]])) as unknown as Snapshot

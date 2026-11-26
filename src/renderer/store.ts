@@ -1,9 +1,10 @@
 import { create } from 'zustand'
 import { addDays, ymd } from '../shared/dates.ts'
+import { newDistraction } from '../shared/distractions.ts'
 import { logId } from '../shared/habits.ts'
 import { parseTask } from '../shared/parse.ts'
 import { completeOps, newTask, uid } from '../shared/tasks.ts'
-import { DEFAULTS, IDLE, KINDS, type GhStatus, type Habit, type Kind, type Kinds, type List, type Op, type PushEvent, type Rpc, type Settings, type SortKey, type Task, type Timer } from '../shared/types.ts'
+import { DEFAULTS, IDLE, KINDS, type GhStatus, type Habit, type Kind, type Kinds, type List, type Op, type PushEvent, type Rpc, type Distraction, type Settings, type SortKey, type Task, type Timer } from '../shared/types.ts'
 
 declare global { interface Window { daybook: { call(m: string, a: unknown[]): Promise<{ ok: true; value: any } | { ok: false; error: string }>; onPush(fn: (e: PushEvent) => void): () => void } } }
 export async function call<K extends keyof Rpc>(m: K, ...a: Parameters<Rpc[K]>): Promise<Awaited<ReturnType<Rpc[K]>>> {
@@ -12,7 +13,7 @@ export async function call<K extends keyof Rpc>(m: K, ...a: Parameters<Rpc[K]>):
   return r.value
 }
 
-export type View = { t: 'today' | 'week' | 'inbox' | 'all' | 'done' | 'trash' | 'calendar' | 'matrix' | 'habits' | 'focus' } | { t: 'list' | 'tag'; id: string }
+export type View = { t: 'today' | 'week' | 'inbox' | 'all' | 'done' | 'trash' | 'calendar' | 'matrix' | 'habits' | 'focus' | 'distractions' } | { t: 'list' | 'tag'; id: string }
 type Data = { [K in Kind]: Record<string, Kinds[K]> }
 interface State {
   gh: GhStatus | null
@@ -128,6 +129,13 @@ export function bumpHabit(h: Habit, date: string) {
   const id = logId(h.id, date), c = get().data.log[id]?.count ?? 0, n = c >= h.goal ? 0 : c + 1
   mutate('Log habit', [n ? { kind: 'log', put: [{ id, habitId: h.id, date, count: n }] } : { kind: 'log', del: [id] }])
 }
+/** Counts one distraction against the running focus session straight away; the note comes after. */
+export function logDistraction(note = ''): Distraction {
+  const d = newDistraction(get().timer, note.trim())
+  mutate('Log distraction', [{ kind: 'distraction', put: [d] }])
+  return d
+}
+export const noteDistraction = (d: Distraction, x: { note?: string; penalty?: number }) => mutate('Edit distraction', [{ kind: 'distraction', put: [{ ...(get().data.distraction[d.id] ?? d), ...x, ...(x.note === undefined ? {} : { note: x.note.trim() }) }] }])
 export const saveSettings = (x: Partial<Settings>) => mutate('Change settings', [{ kind: 'settings', put: [{ ...settingsOf(get().data), ...x }] }])
 export const setSort = (key: string, v: SortKey) => saveSettings({ sort: { ...settingsOf(get().data).sort, [key]: v } })
 export async function deleteList(l: List) {
