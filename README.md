@@ -16,7 +16,7 @@ Dates, times, repeats, `#tag`, `!high/medium/low` and `~List` are read from what
 
 ## Menu bar
 
-Click the icon for a panel with today, the next 7 days and Inbox: add, complete, reschedule, start the focus timer and log habits. Click a task to open it in the app. Right-click for Open, Quick Add and Quit. Settings decides whether the icon shows the number due, the next timed task, or nothing; a running timer always shows its countdown.
+Click the icon for a panel with today, the next 7 days and Inbox: add, complete, reschedule, start the focus timer and log habits. The focus strip has a task picker: choose what the session is for before starting, or attach or switch the task while it runs. Click a task to open it in the app. Right-click for Open, Quick Add and Quit. Settings decides whether the icon shows the number due, the next timed task, or nothing; a running timer always shows its countdown.
 
 ## Distractions
 

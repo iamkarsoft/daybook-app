@@ -4,7 +4,7 @@ import { scheduled } from '../shared/habits.ts'
 import { byDate, byManual } from '../shared/tasks.ts'
 import type { Habit, Task } from '../shared/types.ts'
 import { AddBar } from './Add.tsx'
-import { clock, useLeft } from './Focus.tsx'
+import { clock, TaskPick, useLeft } from './Focus.tsx'
 import { Capture } from './Distractions.tsx'
 import { Check } from './Row.tsx'
 import { bumpHabit, call, fail, inView, menuHandlers, reschedule, tasksOf, undo, useStore, type View } from './store.ts'
@@ -65,8 +65,9 @@ function PanelRow({ t, today, late }: { t: Task; today: string; late?: boolean }
 }
 function FocusStrip() {
   const t = useStore((s) => s.timer), left = useLeft()
-  if (t.phase === 'idle') return <div className="strip"><Icon n="focus" /><span>{t.done ? `${t.done} focus ${t.done === 1 ? 'session' : 'sessions'}` : 'Focus'}</span>{t.done > 0 && <button onClick={() => run(call('timer.break'))}>Break</button>}<button onClick={() => run(call('timer.start', null, ''))}>Start</button></div>
-  return <div className={`strip on ph-${t.phase}`} style={{ '--f': `${t.total ? (1 - left / t.total) * 100 : 0}%` } as React.CSSProperties}><b>{clock(left)}</b><span>{t.phase === 'break' ? 'Break' : t.title || 'Focusing'}</span>
+  const linked = useStore((s) => (t.taskId ? s.data.task[t.taskId] : undefined))
+  if (t.phase === 'idle') return <div className="strip" title={t.done ? `${t.done} focus ${t.done === 1 ? 'session' : 'sessions'} so far` : undefined}><Icon n="focus" /><TaskPick className="ftask" />{t.done > 0 && <button onClick={() => run(call('timer.break'))}>Break</button>}<button onClick={() => run(call('timer.start', linked ? linked.id : null, linked ? linked.title : ''))}>Start</button></div>
+  return <div className={`strip on ph-${t.phase}`} style={{ '--f': `${t.total ? (1 - left / t.total) * 100 : 0}%` } as React.CSSProperties}><b>{clock(left)}</b>{t.phase === 'break' ? <span>Break</span> : <TaskPick className="ftask" />}
     {t.endsAt ? <button className="ghost" aria-label="Pause" onClick={() => run(call('timer.pause'))}><Icon n="pause" s={14} /></button> : <button className="ghost" aria-label="Resume" onClick={() => run(call('timer.resume'))}><Icon n="play" s={13} /></button>}<button className="ghost" aria-label={t.phase === 'break' ? 'Skip break' : 'End focus'} onClick={() => run(call('timer.stop'))}><Icon n="x" s={14} /></button></div>
 }
 function HabitDot({ h, today }: { h: Habit; today: string }) {

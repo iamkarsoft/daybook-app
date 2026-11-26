@@ -55,6 +55,8 @@ export interface Rpc {
   'timer.stop': () => void
   /** Adds minutes to the running or paused focus session. */
   'timer.extend': (minutes: number) => void
+  /** Attaches a task to the running session, or to the next one when idle. */
+  'timer.task': (taskId: string | null, title: string) => void
   'backup.export': () => string | null
   'backup.local': () => string
   'gh.status': () => GhStatus

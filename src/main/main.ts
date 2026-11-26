@@ -157,6 +157,7 @@ const handlers: Handlers = {
   'timer.pause': () => { if (timer.endsAt) setTimer({ ...timer, left: Math.max(0, timer.endsAt - Date.now()), endsAt: null }) },
   'timer.resume': () => { if (timer.left !== null) setTimer({ ...timer, endsAt: Date.now() + timer.left, left: null }) },
   'timer.stop': () => { logFocus(); setTimer({ ...IDLE, done: timer.done }) },
+  'timer.task': (_, taskId, title) => { if (timer.phase !== 'break') setTimer({ ...timer, taskId: typeof taskId === 'string' ? taskId : null, title: String(title ?? '').slice(0, 500) }) },
   'timer.extend': (_, minutes) => {
     const ms = Math.max(0, Math.min(120, Math.trunc(Number(minutes)) || 0)) * 60000
     if (timer.phase !== 'focus' || !ms) return
